@@ -1,0 +1,17 @@
+- thoát ra vào chơi tiếp đc lưu điểm
+- pause !!
+!! 1 - 2 player mode (p1 <color1> - p2 <color2> / ai <color3>)
+- Ball:
++ sw color according to the just-hit paddle
+- obstacle (extra hard? -> movin)
+- power-ups* (color orbs, collidable) -> activated for player whose ball collide first
++ barrier: 2nd defense behind paddle 
++ ball speed
++ paddle size
++ 2 x ball (random diff angles)
+
+
+Description:
++ dou-ball :  iniate another class Ball instance
++  paddle-up : to enlarge the
++ shield : to spawn a wall (rectangle) behind the paddle
