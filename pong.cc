@@ -3,18 +3,16 @@
 #include "ball.h"
 #include "paddle.h"
 #include "utilities.h"
+#include "power_ups.h"
 
 // Screen resolution.
-const int Pong::SCREEN_WIDTH = 640; //640
-const int Pong::SCREEN_HEIGHT = 480; //480
+const int Pong::SCREEN_WIDTH = 960; //640
+const int Pong::SCREEN_HEIGHT = 720; //480
 
 //Game mode
-enum difLevel {ez, med, hard};
-difLevel dif = ez;
+//enum difLevel {ez, med, hard};
+//difLevel dif = ez;
 int selectedOption = 0; // 0: 1 player, 1: 2 players, 2: Settings, 3: Exit
-
-//Game state
-//bool isPaused = false;
 
 //Game functions
 Pong::Pong(int argc, char *argv[]) {
@@ -38,8 +36,10 @@ Pong::Pong(int argc, char *argv[]) {
     right_paddle = new Paddle(SCREEN_WIDTH-(40+Paddle::WIDTH),
             SCREEN_HEIGHT/2-Paddle::HEIGHT/2);
 
+
     // Initialize SDL_mixer.
     Mix_OpenAudio(22050, MIX_DEFAULT_FORMAT, 2, 1024);
+
 
     // Load sounds.
     bg_music = Mix_LoadMUS("assets/sounds/bg music.mp3");
@@ -55,13 +55,15 @@ Pong::Pong(int argc, char *argv[]) {
     if (TTF_Init() < 0) {
         std::cout << "SDL_ttf initialization failed. TTF_Error: " << TTF_GetError() << std::endl;
     }
+
     // Initialize font.
     font_color = {255, 255, 255, 255};
     font_name = "assets/fonts/Peepo.ttf";
-    font_image_title = renderText("POG THE GAME 2K23",
-            font_name, font_color, 60, renderer);
+    font_image_title = renderText("POG THE GAME",
+            font_name, font_color, 90, renderer);
     font_image_launch = renderText("Press SPACE to launch",
             font_name, font_color, 30, renderer);
+
     // Scores.
     left_score = 0;
     right_score = 0;
@@ -70,7 +72,22 @@ Pong::Pong(int argc, char *argv[]) {
     left_score_changed = true;
     right_score_changed = true;
 
+     //powerups
+    paddleSizeIncreaseTexture = loadTextureFromIMG("paddle_increase.png", renderer);
+
+    ballSpeedUpTexture = loadTextureFromIMG("speedball.png", renderer);
+    shieldTexture = loadTextureFromIMG("shield.png", renderer);
+
+    powerUps = { PowerUp(paddleSizeIncreaseTexture, PADDLE_SIZE_INCREASE),
+    PowerUp(ballSpeedUpTexture, BALL_SPEED_UP),PowerUp(shieldTexture, SHIELD)};
+
+    //Timing of power ups
+    currPU = &powerUps[2];
+    spawnInterval = 7000; // 7 seconds in milliseconds
+    lastSpawnTime = 0;
+
     // Game status.
+    isPaused = false;
     exit = false;
     inMenu = true;
 }
@@ -82,6 +99,13 @@ Pong::~Pong() {
     SDL_DestroyTexture(font_image_winner);
     SDL_DestroyTexture(font_image_restart);
     SDL_DestroyTexture(font_image_launch);
+
+    delete ball;
+    delete left_paddle;
+    delete right_paddle;
+    SDL_DestroyTexture(paddleSizeIncreaseTexture);
+    SDL_DestroyTexture(ballSpeedUpTexture);
+    SDL_DestroyTexture(shieldTexture);
 
     // Free sound effects.
     Mix_FreeChunk(paddle_sound);
@@ -104,10 +128,10 @@ Pong::~Pong() {
 }
 
 void Pong::menu() {
-    const int MENU_START_X = 320;
-    const int MENU_START_Y = 200;
-    const int MENU_OPTION_SPACING = 50;
-    const int optionSize = 36;
+    const int MENU_START_X = Pong::SCREEN_WIDTH/2 - 100;
+    const int MENU_START_Y = Pong::SCREEN_WIDTH/2 - 100;
+    const int MENU_OPTION_SPACING = 70;
+    const int optionSize = 50;
 
     //Selected option FX
     bool optionSelected = false;
@@ -117,12 +141,12 @@ void Pong::menu() {
     //Load media
     if(Mix_PlayingMusic() == 0) Mix_PlayMusic( bg_music, -1 );
 
-    SDL_Texture *bg = loadTextureFromIMG("bg.jpg", renderer);
+    SDL_Texture *bg = loadTextureFromIMG("menuBG.jpg", renderer);
     SDL_Texture *p1 = renderText("1 Player", font_name, font_color, optionSize, renderer);
     SDL_Texture *p2 = renderText("2 Player", font_name, font_color, optionSize, renderer);
-    SDL_Texture *settings = renderText("Settings", font_name, font_color, optionSize, renderer);
+    SDL_Texture *tut = renderText("Tutorial", font_name, font_color, optionSize, renderer);
     SDL_Texture *esc = renderText("Exit", font_name, font_color, optionSize, renderer);
-    SDL_Texture *menuOptionTextures[4] = {p1, p2, settings, esc};
+    SDL_Texture *menuOptionTextures[4] = {p1, p2, tut, esc};
     SDL_Texture *arrowTexture = loadTextureFromIMG("indicator.png", renderer);
 
     SDL_Event e;
@@ -145,13 +169,7 @@ void Pong::menu() {
                     } else {
                         optionSelected = true;
 //                        blinkStartTime = SDL_GetTicks();
-                        // Handle the chosen option and proceed to the game
-                        // For now, we'll just print the chosen option
                         std::cout << "Chosen option: " << selectedOption << std::endl;
-
-//                                if (ball->status == ball->READY) {
-//                                    ball->status = ball->LAUNCH;
-//                                }
                     }
                     inMenu = false;
                     break;
@@ -169,31 +187,20 @@ void Pong::menu() {
 
     //Title
     renderTexture(font_image_title,
-        renderer, SCREEN_WIDTH / 4 - 140, SCREEN_HEIGHT/4 - 150);
+        renderer, SCREEN_WIDTH / 4 , SCREEN_HEIGHT/4);
 
 
     // Render your menu options and arrow here using SDL functions and textures
     for (int i = 0; i < 4; ++i) {
         double optionX = MENU_START_X;
         double optionY = MENU_START_Y + i * MENU_OPTION_SPACING;
-        double optionW, optionH;
-//        if (optionSelected && i == selectedOption) {
-//            Uint32 currentTime = SDL_GetTicks();
-//            if ((currentTime - blinkStartTime) % (2 * blinkInterval) < blinkInterval) {
-//                continue; // Skip rendering this option for half the interval
-//            }
-//            SDL_Delay(1000);
-//        }
-//                SDL_QueryTexture(menuOptionTextures[i], NULL, NULL, &optionW, &optionH);
-//                SDL_Rect optionRect = {optionX, optionY, optionW, optionH};
-//                SDL_RenderCopy(renderer, menuOptionTextures[i], nullptr, &optionRect);
         renderTexture(menuOptionTextures[i], renderer, optionX, optionY);
     }
 
     // Render arrow
     int arrowX = MENU_START_X - 75; // Adjust the X-coordinate based on your design
     int arrowY = MENU_START_Y + selectedOption * MENU_OPTION_SPACING;
-    SDL_Rect arrowRect = { arrowX, arrowY, 70, 50};
+    SDL_Rect arrowRect = { arrowX, arrowY, 70, 80};
     SDL_RenderCopy(renderer, arrowTexture, nullptr, &arrowRect);
 
     // Update the screen
@@ -208,14 +215,71 @@ void Pong::menu() {
     }
 }
 
+void Pong::PU() {
+    srand(time(0));
+    Uint32 currentTime = SDL_GetTicks();
+    Uint32 deltaTime = currentTime - lastSpawnTime;
+    if (deltaTime < spawnInterval) {
+        int countdownRemaining = (spawnInterval - deltaTime) / 1000;
+        // Create and render the countdown timer text
+        std::string countdownText = "Power-up spawns in " + std::to_string(countdownRemaining) + " seconds";
+        SDL_Texture* countdownTexture = renderText(countdownText, font_name, font_color, 24, renderer);
+
+        renderTexture(countdownTexture, renderer, Pong::SCREEN_WIDTH/2 - 200, Pong::SCREEN_HEIGHT - 100);
+        if (countdownRemaining <= 0) {
+            // Clean up countdown texture and surface
+            if(countdownTexture) SDL_DestroyTexture(countdownTexture);
+        }
+    }
+
+        if (deltaTime >= spawnInterval) {
+            int powIdx = rand()%3;
+            currPU = &powerUps[powIdx];
+            currPU->spawn();
+            currPU->update();
+            lastSpawnTime = currentTime;
+        }
+
+        if (currPU->isActive && currPU->checkCollision(ball)) {
+            std::string powerUpType;
+            switch (currPU->type) {
+                case PADDLE_SIZE_INCREASE:
+                    powerUpType = "Paddle Size Increase";
+                    if(ball->angle < 0) left_paddle->sizeIncrease();
+                    else right_paddle->sizeIncrease();
+
+                    break;
+                case BALL_SPEED_UP:
+                    powerUpType = "Ball Speed Up";
+                    break;
+                case SHIELD:
+                    powerUpType = "Opponent Paddle Slowdown";
+                    break;
+            }
+            std::cout << "Collide with " << powerUpType << " orb" << std::endl;
+            currPU->isActive = false;
+        }
+
+        currPU->render(renderer);
+}
 
 void Pong::execute() {
+
     while (!exit) {
         while(inMenu) menu();
         if(exit) break;
         input();
-        update();
+
+        if(!isPaused) {
+            update();
+            if(inMenu) {
+                isPaused = false;
+                continue;
+            }
+        }
         render();
+        SDL_RenderPresent(renderer);
+        // Render countdown
         SDL_Delay(20);
     }
 }
@@ -262,11 +326,32 @@ void Pong::input() {
                     }
                     break;
                 }
+
+                //Return to menu
                 case SDLK_b: {
                     inMenu = true;
+                    left_score = 0;
+                    right_score = 0;
+                    ball->status = ball->READY;
+                    ball->reset();
+
+                    // Indicates when rendering new score is necessary.
+                    left_score_changed = true;
+                    right_score_changed = true;
                     break;
                 }
+
+
+                //Pause game
                 case SDLK_p: {
+                    if(!isPaused) isPaused = true;
+                    else isPaused = false;
+                    break;
+                }
+
+
+                //Stop music
+                case SDLK_m: {
                     //If there is no music playing
                     if( Mix_PlayingMusic() == 0 )
                     {
@@ -354,26 +439,26 @@ void Pong::update() {
 
 // Render objects on screen.
 void Pong::render() {
-    // Clear screen (background color).
-    SDL_SetRenderDrawColor(renderer, 26, 51, 122, 255);
-    SDL_RenderClear(renderer);
+    // Clear screen (background color)
+    SDL_Texture *mbg = loadTextureFromIMG("gameBG.jpg", renderer);
+    SDL_RenderCopy(renderer, mbg, nullptr, nullptr);
 
-    // Color right background with white.
-    SDL_SetRenderDrawColor( renderer, 187, 191, 194, 255 );
-    SDL_Rect right_background = { SCREEN_WIDTH / 2, 0, SCREEN_WIDTH / 2, SCREEN_HEIGHT };
-    SDL_RenderFillRect( renderer, &right_background );
+    SDL_SetRenderDrawColor( renderer, 187, 191, 194, 255);
+    SDL_RenderDrawLine(renderer, SCREEN_WIDTH / 2, 0, SCREEN_WIDTH / 2, SCREEN_HEIGHT);
+
+    if(!isPaused) PU();
 
     // Render filled paddle.
     SDL_Rect lpad = { left_paddle->get_x(),
         left_paddle->get_y(),
-        Paddle::WIDTH, Paddle::HEIGHT };
+        Paddle::WIDTH, left_paddle->get_h() };
     SDL_RenderFillRect(renderer, &lpad);
 
     // Render filled paddle.
     SDL_SetRenderDrawColor(renderer, 26, 51, 122, 255);
     SDL_Rect rpad = { right_paddle->get_x(),
         right_paddle->get_y(),
-        Paddle::WIDTH, Paddle::HEIGHT };
+        Paddle::WIDTH, right_paddle->get_h() };
     SDL_RenderFillRect(renderer, &rpad);
 
     // Render ball.
@@ -445,8 +530,5 @@ void Pong::render() {
         renderTexture(font_image_launch,
                 renderer, SCREEN_WIDTH / 2 - 140, SCREEN_HEIGHT - 150);
     }
-
-    // Swap buffers.
-    SDL_RenderPresent(renderer);
 }
 

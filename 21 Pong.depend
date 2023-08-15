@@ -41,25 +41,25 @@
 	<SDL.h>
 	<SDL_ttf.h>
 
-1691653292 source:c:\users\admin\desktop\ehsan's corner\year 1\ltnc\21 pong\ball.cc
+1692079467 source:c:\users\admin\desktop\ehsan's corner\year 1\ltnc\21 pong\ball.cc
 	<cmath>
 	<random>
 	"ball.h"
 	"pong.h"
 	"paddle.h"
 
-1691653199 c:\users\admin\desktop\ehsan's corner\year 1\ltnc\21 pong\ball.h
+1692064551 c:\users\admin\desktop\ehsan's corner\year 1\ltnc\21 pong\ball.h
 	"paddle.h"
-	"power_ups.h"
 
-1691473781 c:\users\admin\desktop\ehsan's corner\year 1\ltnc\21 pong\paddle.h
+1692084115 c:\users\admin\desktop\ehsan's corner\year 1\ltnc\21 pong\paddle.h
 	<SDL.h>
 
-1691988715 c:\users\admin\desktop\ehsan's corner\year 1\ltnc\21 pong\pong.h
+1692070933 c:\users\admin\desktop\ehsan's corner\year 1\ltnc\21 pong\pong.h
 	<SDL.h>
 	<SDL_ttf.h>
 	<SDL_mixer.h>
 	<string>
+	<bits/stdc++.h>
 
 1641849092 c:\users\admin\desktop\ehsan's corner\year 1\ltnc\sdl2 libraries\include\sdl.h
 	"SDL_main.h"
@@ -453,17 +453,18 @@
 	"begin_code.h"
 	"close_code.h"
 
-1691473781 source:c:\users\admin\desktop\ehsan's corner\year 1\ltnc\21 pong\paddle.cc
+1692084855 source:c:\users\admin\desktop\ehsan's corner\year 1\ltnc\21 pong\paddle.cc
 	"paddle.h"
 	"ball.h"
 	"pong.h"
 
-1691991156 source:c:\users\admin\desktop\ehsan's corner\year 1\ltnc\21 pong\pong.cc
+1692085737 source:c:\users\admin\desktop\ehsan's corner\year 1\ltnc\21 pong\pong.cc
 	<iostream>
 	"pong.h"
 	"ball.h"
 	"paddle.h"
 	"utilities.h"
+	"power_ups.h"
 
 1691634191 c:\users\admin\desktop\ehsan's corner\year 1\ltnc\21 pong\utilities.h
 	<SDL.h>
@@ -483,5 +484,17 @@
 	"begin_code.h"
 	"close_code.h"
 
-1691651348 c:\users\admin\desktop\ehsan's corner\year 1\ltnc\21 pong\power_ups.h
+1692082199 c:\users\admin\desktop\ehsan's corner\year 1\ltnc\21 pong\power_ups.h
+
+1692079717 source:c:\users\admin\desktop\ehsan's corner\year 1\ltnc\21 pong\power_ups.cpp
+	"ball.h"
+	"pong.h"
+	"paddle.h"
+	"power_ups.h"
+	<SDL.h>
+	<SDL_image.h>
+	<SDL_ttf.h>
+	<iostream>
+	<vector>
+	<ctime>
 

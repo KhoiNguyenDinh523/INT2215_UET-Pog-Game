@@ -2,12 +2,13 @@
 #include "ball.h"
 #include "pong.h"
 
-const int Paddle::HEIGHT = 70;
-const int Paddle::WIDTH = 15;
-const int Paddle::VEL = 20;
-Paddle::Paddle(int new_x, int new_y) {
+const int Paddle::HEIGHT = 130;
+const int Paddle::WIDTH = 24;
+const int Paddle::VEL = 30;
+Paddle::Paddle(double new_x, double new_y) {
     x = new_x;
     y = new_y;
+    h = Paddle::HEIGHT;
 }
 
 int Paddle::get_x() const {
@@ -16,6 +17,14 @@ int Paddle::get_x() const {
 
 int Paddle::get_y() const {
     return y;
+}
+
+int Paddle::get_h() const {
+    return h;
+}
+
+void Paddle::sizeIncrease(){
+    h += 20;
 }
 
 void Paddle::set_y(int new_y) {
@@ -62,7 +71,6 @@ int Paddle::predict(Ball *ball) {
 
     // Predictions taking into consideration upper and bottom
     // wall collisions.
-
     if (number_of_reflexions % 2 == 0)
         predicted_y = predicted_y % Pong::SCREEN_HEIGHT;
     else
@@ -85,8 +93,8 @@ void Paddle::AI(Ball *ball) {
     } else if (ball->dx >= 0) {
         // Left paddle slowly moves to the center.
         if (y + HEIGHT / 2 < Pong::SCREEN_HEIGHT/2)
-            add_to_y(2);
+            add_to_y(5);
         else if (y + HEIGHT / 2 > Pong::SCREEN_HEIGHT/2)
-            add_to_y(-2);
+            add_to_y(-5);
     }
 }

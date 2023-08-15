@@ -45,12 +45,8 @@
 		<Unit filename="paddle.h" />
 		<Unit filename="pong.cc" />
 		<Unit filename="pong.h" />
-		<Unit filename="power_ups.cpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="power_ups.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="power_ups.cpp" />
+		<Unit filename="power_ups.h" />
 		<Unit filename="utilities.cc" />
 		<Unit filename="utilities.h" />
 		<Extensions />

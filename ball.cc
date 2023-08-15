@@ -11,7 +11,7 @@ namespace {
 }
 
 // Ball dimensions (a square).
-const int Ball::LENGTH = 15;
+const int Ball::LENGTH = 20;
 
 Ball::Ball(double x, double y) {
     // Ball status.
@@ -24,7 +24,7 @@ Ball::Ball(double x, double y) {
     // Ball movement.
     dx = 0;
     dy = 0;
-    speed = 10;
+    speed = 15;
     angle = 0;
     hits = 0;
     predicted_y = 0;
@@ -51,9 +51,14 @@ void Ball::bounces_off(Paddle *paddle) {
 
     int sign = (paddle->get_x() < Pong::SCREEN_WIDTH/2) ? 1 : -1; //1 is left, -1 is right paddle.
 
-    double relative_y = (y - paddle->get_y() + LENGTH);
+    double relative_y = (y - paddle->get_y() + LENGTH); //screen coords where the ball hit the paddle vertically.
 
-    angle = (2.14 * relative_y - 75);
+    // Calculate the normalized relative position within the paddle (0 to 1)
+    double normalized_relative_y = relative_y / Paddle::HEIGHT;
+
+    // Calculate the angle based on the normalized relative position
+    // You can experiment with the angle calculation formula
+    angle = (-normalized_relative_y * 120) + 60; // Adjust the constants as needed
 
     dx = sign * speed * cos(angle * M_PI/180);
     dy = speed * sin(angle * M_PI/180);
@@ -62,7 +67,7 @@ void Ball::bounces_off(Paddle *paddle) {
 void Ball::update_speed() {
     // Increment ball speed for every 5 hit.
     if (hits == 4) {
-        speed+=5;
+        speed+=3;
         hits = 0;
     }
 }
@@ -77,16 +82,16 @@ bool Ball::pad_collides(Paddle *paddle) {
         if (x > paddle->get_x() + Paddle::WIDTH ||
             x < paddle->get_x() ||
             !(y + LENGTH > paddle->get_y() &&
-              y <= paddle->get_y() + Paddle::HEIGHT))
+              y < paddle->get_y() + Paddle::HEIGHT))
             return false;
         else
             return true;
     } else {
         // Check if collision with right paddle occurs.
         if (x + LENGTH < paddle->get_x() ||
-            x > paddle->get_x() + Paddle::WIDTH ||
+            x >= paddle->get_x() + Paddle::WIDTH ||
             !(y + LENGTH > paddle->get_y() &&
-              y <= paddle->get_y() + Paddle::HEIGHT))
+              y < paddle->get_y() + Paddle::HEIGHT))
             return false;
         else
             return true;
@@ -104,6 +109,6 @@ void Ball::reset() {
     status = READY;
 
     // Speed and hit counter are reset to their initial positions.
-    speed = 10;
+    speed = 15;
     hits = 0;
 }

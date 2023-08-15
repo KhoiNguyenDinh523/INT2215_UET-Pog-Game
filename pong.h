@@ -5,9 +5,11 @@
 #include <SDL_ttf.h>                   // SDL font library.
 #include <SDL_mixer.h>                 // SDL sound library.
 #include <string>
+#include <bits/stdc++.h>
 
 class Ball;
 class Paddle;
+class PowerUp;
 
 class Pong {
  private:
@@ -34,6 +36,7 @@ class Pong {
 
     SDL_Color font_color;
 
+    //Text textures
     SDL_Texture* font_image_title;
     SDL_Texture* font_image_launch; // Holds first part of text suggesting to launch the ball.
     SDL_Texture* font_image_left_score;
@@ -49,9 +52,22 @@ class Pong {
     bool left_score_changed;
     bool right_score_changed;
 
+    //Power-up textures
+    SDL_Texture* paddleSizeIncreaseTexture;
+    SDL_Texture* ballSpeedUpTexture;
+    SDL_Texture* shieldTexture;
+
+    std::vector<PowerUp> powerUps;
+
+    //Timing of power ups
+    PowerUp* currPU;
+    Uint32 spawnInterval; // 7 seconds in milliseconds
+    Uint32 lastSpawnTime;
+
     // Game status.
     bool exit;  // True when player wants to exit game.
     bool inMenu;
+    bool isPaused;
 
  public:
     // Screen resolution.
@@ -63,6 +79,7 @@ class Pong {
     void execute();
     void menu();
     void input();
+    void PU(); //power-ups
     void update();
     void render();
 };

@@ -2,7 +2,6 @@
 #define SRC_BALL_H_
 
 #include "paddle.h"
-#include "power_ups.h"
 
 class Ball {
  public:
